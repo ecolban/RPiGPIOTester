@@ -13,6 +13,13 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
+
+/**
+ * This class is used to illustrate some basic functionality of dom4j
+ * 
+ * @author ecolban
+ *
+ */
 public class XMLTester {
 
 	public static final File OUTPUT_FILE = new File("/Users/ecolban/output.xml");
@@ -23,21 +30,17 @@ public class XMLTester {
 		// Create an XML document
 		Document doc1 = foo.createDocument();
 		// Write the document to a file
-		try {
-			foo.write(doc1);
-		} catch (IOException e) {
-			return;
-		}
+		foo.write(doc1);
 
-		// Read the document from a file and print out some of the info.
-		try {
-			foo.parse(OUTPUT_FILE);
-		} catch (DocumentException e) {
-			System.out.println(e.getMessage());
-		}
+		// Read the document from a file and print out some of the contents.
+		foo.parse(OUTPUT_FILE);
 
 	}
-
+	/**
+	 * Creates a document
+	 * 
+	 * @return the document
+	 */
 	public Document createDocument() {
 		Document document = DocumentHelper.createDocument();
 		Element root = document.addElement("root");
@@ -48,33 +51,56 @@ public class XMLTester {
 		summer.addElement("onoff").addAttribute("LEDs", "0, 1")
 				.addAttribute("start", "0").addAttribute("duration", "1000");
 		summer.addElement("onoff").addAttribute("LEDs", "2, 3")
-		.addAttribute("start", "500").addAttribute("duration", "1000");
+				.addAttribute("start", "500").addAttribute("duration", "1000");
 		summer.addElement("onoff").addAttribute("LEDs", "4, 5")
-		.addAttribute("start", "1000").addAttribute("duration", "1000");
+				.addAttribute("start", "1000").addAttribute("duration", "1000");
 
 		return document;
 	}
 
-	public void write(Document document) throws IOException {
+	/**
+	 * Writes a given document to a file
+	 * 
+	 * @param document the given document
+	 */
+	public void write(Document document) {
 
-		// lets write to a file
+		// write to a file
 		OutputFormat format = OutputFormat.createPrettyPrint();
-		XMLWriter writer = new XMLWriter(new FileWriter(OUTPUT_FILE), format);
-		writer.write(document);
-		writer.close();
+		XMLWriter writer = null;
+		try {
+			writer = new XMLWriter(new FileWriter(OUTPUT_FILE), format);
+			writer.write(document);
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			if (writer != null) {
+				try {
+					writer.close();
+				} catch (IOException e) {
+					System.out.println(e.getMessage());
+				}
+			}
+		}
 
 	}
 
-	public void parse(File file) throws DocumentException {
+	/**
+	 * Creates a document from an XML file and prints out some info
+	 * @param file
+	 */
+	public void parse(File file) {
 		SAXReader reader = new SAXReader();
-		Document document = reader.read(file);
-		// iterate through child elements of root
-		Element root = document.getRootElement();
-		for (@SuppressWarnings("unchecked")
-		Iterator<Element> i = root.elementIterator(); i.hasNext();) {
-			Element element = i.next();
-			System.out.print(element.getText() + " ");
-			System.out.println(element.attributeValue("location"));
+		try {
+			Document document = reader.read(file);
+			Element root = document.getRootElement();
+			for (@SuppressWarnings("unchecked")
+			Iterator<Element> i = root.elementIterator(); i.hasNext();) {
+				Element element = i.next();
+				System.out.println("schedule = " + element.attributeValue("name"));
+			}
+		} catch (DocumentException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 }
