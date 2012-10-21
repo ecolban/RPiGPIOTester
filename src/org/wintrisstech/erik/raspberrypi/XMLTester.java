@@ -22,7 +22,7 @@ import org.dom4j.io.XMLWriter;
  */
 public class XMLTester {
 
-	public static final File OUTPUT_FILE = new File("/Users/ecolban/output.xml");
+	private static final File OUTPUT_FILE = new File("/Users/ecolban/output.xml");
 
 	public static void main(String[] args) {
 		/* Create an instance of XMLTester */
