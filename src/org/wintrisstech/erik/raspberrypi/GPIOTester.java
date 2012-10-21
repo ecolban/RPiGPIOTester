@@ -1,5 +1,7 @@
 package org.wintrisstech.erik.raspberrypi;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
@@ -22,16 +24,21 @@ public class GPIOTester {
 
 	public static void main(String[] args) {
 		if (args.length == 0) {
-			new GPIOTester().runHeadless();
+			try {
+				new GPIOTester().runHeadless();
+			} catch (MalformedURLException e) {
+				System.out.println(e.getMessage());
+			}
 		} else {
 			System.out.println(USAGE);
 		}
 	}
 
-	private void runHeadless() {
-//		 gpio = getInitializedGPIO();
+	private void runHeadless() throws MalformedURLException {
+		 gpio = getInitializedGPIO();
 		ScheduleReader reader = new ScheduleReader();
-		URL url = reader.getClass().getResource("Schedules.xml");
+		File schedules = new File("/home/pi/RPiGPIOTester/Schedules.xml");
+		URL url = schedules.toURI().toURL();
 		List<GpioAction> actions = reader.readFile(url);
 		try {
 			run(actions);
@@ -41,7 +48,7 @@ public class GPIOTester {
 		} finally {
 			// Set all pins to "off"
 			for (int i = 0; i < OUT_PIN.length; i++) {
-				// gpio.setValue(OUT_PIN[i], false);
+				 gpio.setValue(OUT_PIN[i], false);
 			}
 		}
 	}
@@ -63,11 +70,11 @@ public class GPIOTester {
 	private void runAction(GpioAction action) {
 		int[] indices = action.getHeadsOff();
 		for (int i = 0; i < indices.length; i++) {
-			// gpio.setValue(OUT_PIN[i], false);
+			 gpio.setValue(OUT_PIN[indices[i]], false);
 		}
 		indices = action.getHeadsOn();
 		for (int i = 0; i < indices.length; i++) {
-			// gpio.setValue(OUT_PIN[i], true);
+			 gpio.setValue(OUT_PIN[indices[i]], true);
 		}
 		System.out.print(new Date(TestTime.currentTimeMillis()) + ": ");
 		System.out.println(action);
