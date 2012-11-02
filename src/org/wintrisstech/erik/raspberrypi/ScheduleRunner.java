@@ -18,7 +18,7 @@ public class ScheduleRunner extends Thread {
 			Boardpin.PIN19_GPIO10, Boardpin.PIN21_GPIO9, Boardpin.PIN23_GPIO11 };
 
 	// GPIO gateway
-//	private static GpioGateway GPIO_GW = getGpioGateway();
+	private static GpioGateway GPIO_GW = getGpioGateway();
 
 	public ScheduleRunner(List<GpioAction> actions) {
 		this.actions = actions;
@@ -33,26 +33,26 @@ public class ScheduleRunner extends Thread {
 	public void run() {
 		try {
 			while (true) {
-				for (GpioAction a : actions) {
-					long sleepTime = a.getTimeOfAction()
+				for (GpioAction action : actions) {
+					long sleepTime = action.getTimeOfAction()
 							- TestTime.currentTimeMillis();
 					if (0L < sleepTime) {
 						System.out.println("Going to sleep for " + sleepTime
 								+ " ms.");
 						Thread.sleep(sleepTime / TestTime.TIME_FACTOR);
 					}
-					int[] head = a.getHeadsOff();
+					int[] head = action.getHeadsOff();
 					for (int i = 0; i < head.length; i++) {
-//						 GPIO_GW.setValue(OUT_PIN[head[i]], false);
+						GPIO_GW.setValue(OUT_PIN[head[i]], false);
 					}
-					head = a.getHeadsOn();
+					head = action.getHeadsOn();
 					for (int i = 0; i < head.length; i++) {
-						// GPIO_GW.setValue(OUT_PIN[head[i]], true);
+						GPIO_GW.setValue(OUT_PIN[head[i]], true);
 					}
 					System.out.print(new Date(TestTime.currentTimeMillis())
 							+ ": ");
-					System.out.println(a);
-					a.addWeek();
+					System.out.println(action);
+					action.addWeek();
 				}
 			}
 		} catch (InterruptedException ex) {
@@ -61,13 +61,13 @@ public class ScheduleRunner extends Thread {
 
 		} finally {
 			// Set all pins to "off"
-//			for (int i = 0; i < OUT_PIN.length; i++) {
-//				GPIO_GW.setValue(OUT_PIN[i], false);
-//			}
+			for (int i = 0; i < OUT_PIN.length; i++) {
+				GPIO_GW.setValue(OUT_PIN[i], false);
+			}
 			System.out.println("Turning all heads off.");
 		}
 	}
-	
+
 	/**
 	 * Sets up the output pins.
 	 * 

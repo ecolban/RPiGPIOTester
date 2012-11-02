@@ -15,18 +15,17 @@ public class SprinklerController {
 
 	/**
 	 * @param args
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws MalformedURLException
 	 */
-	public static void main(String[] args) {
-		if(args.length != 0) {
+	public static void main(String[] args) throws MalformedURLException,
+			InterruptedException, IOException {
+		if (args.length != 0) {
 			System.out.println(USAGE);
 			return;
 		}
-		try {
-			new SprinklerController().run();
-		} catch (MalformedURLException e) {
-		} catch (InterruptedException e) {
-		} catch (IOException e) {
-		}
+		new SprinklerController().run();
 	}
 
 	public void run() throws MalformedURLException, InterruptedException,
@@ -61,7 +60,6 @@ public class SprinklerController {
 	private boolean isUrlModified(URL url, long lastRead) throws IOException {
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setIfModifiedSince(lastRead);
-//		connection.connect();
 		return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
 	}
 
