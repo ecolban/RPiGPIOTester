@@ -1,5 +1,6 @@
 package org.wintrisstech.erik.raspberrypi;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,15 +28,24 @@ public class ScheduleReader {
 	public static void main(String[] args) {
 		
 		ScheduleReader reader = new ScheduleReader();
-		URL url = reader.getClass().getResource("Schedules.xml");
-		List<GpioAction> list = reader.readFile(url);
+//		URL url = reader.getClass().getResource("Schedules.xml");
+		URL url = null;
+		try {
+			url = new URL("http://localhost:8888/schedules/Schedules.xml");
+			System.out.println(url);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		List<GpioAction> list = reader.read(url);
 		for(GpioAction action : list) {
 			System.out.println(action);
 		}
 		System.out.println("NOW = " + new Date(TestTime.currentTimeMillis()));
 	}
 
-	public List<GpioAction> readFile(URL url) {
+	public List<GpioAction> read(URL url) {
 		List<GpioAction> result = new ArrayList<GpioAction>();
 		SAXReader reader = new SAXReader();
 		try {
@@ -97,7 +107,6 @@ public class ScheduleReader {
 		} else {
 			off = new int[0];
 		}
-		assert on != null || off != null;
 		// the time of the action
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 		dateFormat.setTimeZone(TZ);
@@ -132,8 +141,5 @@ public class ScheduleReader {
 		}
 		return result;
 	}
-
-	
-	
 
 }
