@@ -12,6 +12,8 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -24,57 +26,53 @@ public class ScheduleReader {
 	private static final TimeZone TZ = TimeZone.getTimeZone("PST");
 
 	private final Calendar now = GregorianCalendar.getInstance();
-	
-	public static void main(String[] args) {
-		
+
+	private static final Logger logger = Logger
+			.getLogger(SprinklerController.class.getName());
+
+	public static void main(String[] args) throws DocumentException {
+
 		ScheduleReader reader = new ScheduleReader();
-//		URL url = reader.getClass().getResource("Schedules.xml");
+		// URL url = reader.getClass().getResource("Schedules.xml");
 		URL url = null;
 		try {
 			url = new URL("http://localhost:8888/schedules/Schedules.xml");
-			System.out.println(url);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, e.getMessage());
 			return;
 		}
 		List<GpioAction> list = reader.read(url);
-		for(GpioAction action : list) {
+		for (GpioAction action : list) {
 			System.out.println(action);
 		}
-		System.out.println("NOW = " + new Date(TestTime.currentTimeMillis()));
 	}
 
-	public List<GpioAction> read(URL url) {
+	public List<GpioAction> read(URL url) throws DocumentException {
 		List<GpioAction> result = new ArrayList<GpioAction>();
 		SAXReader reader = new SAXReader();
-		try {
-			Document document = reader.read(url);
-			Element root = document.getRootElement();
-			now.setTimeInMillis(TestTime.currentTimeMillis());
-			for (@SuppressWarnings("unchecked")
-			Iterator<Element> i = root.elementIterator("schedule"); i.hasNext();) {
-				Element schedule = i.next();
-				for (int day : getDaysOfWeek(schedule)) {
-					if (day == 0) { // value 0 used for erroneous day
+		Document document = reader.read(url);
+		Element root = document.getRootElement();
+		now.setTimeInMillis(TestTime.currentTimeMillis());
+		for (@SuppressWarnings("unchecked")
+		Iterator<Element> i = root.elementIterator("schedule"); i.hasNext();) {
+			Element schedule = i.next();
+			for (int day : getDaysOfWeek(schedule)) {
+				if (day == 0) { // value 0 used for erroneous day
+					continue;
+				}
+				for (@SuppressWarnings("unchecked")
+				Iterator<Element> j = schedule.elementIterator("action"); j
+						.hasNext();) {
+					Element action = j.next();
+					try {
+						result.add(createGpioAction(day, action));
+					} catch (ParseException e) {
 						continue;
-					}
-					for (@SuppressWarnings("unchecked")
-					Iterator<Element> j = schedule.elementIterator("action"); j
-							.hasNext();) {
-						Element action = j.next();
-						try {
-							result.add(createGpioAction(day, action));
-						} catch (ParseException e) {
-							continue;
-						} catch (NumberFormatException ex) {
-							continue;
-						}
+					} catch (NumberFormatException ex) {
+						continue;
 					}
 				}
 			}
-		} catch (DocumentException e) {
-			System.out.println(e.getMessage());
 		}
 		Collections.sort(result);
 		return result;
