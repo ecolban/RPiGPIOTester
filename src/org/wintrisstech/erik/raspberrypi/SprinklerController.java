@@ -1,7 +1,7 @@
 package org.wintrisstech.erik.raspberrypi;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -27,8 +27,9 @@ public class SprinklerController {
 															// minutes and 20
 															// seconds
 
-	private static final Logger logger = Logger.getLogger(SprinklerController.class.getName());
-	
+	private static final Logger logger = Logger
+			.getLogger(SprinklerController.class.getName());
+
 	/**
 	 * 
 	 * @param args
@@ -56,21 +57,22 @@ public class SprinklerController {
 	 */
 	public void run() throws MalformedURLException, InterruptedException {
 		ScheduleReader reader = new ScheduleReader();
-		URL url = new URL("http://localhost:8888/schedules/Schedules.xml");
-		long lastRead = 0L;
+		URL url = getURL();
+		System.out.println(url);
+		int lastRead = -1;
 		ScheduleRunner runner = null;
 		while (true) {
 			try {
-				if (isModified(url, lastRead)) {
-					stopRunner(runner);
-					List<GpioAction> actions = reader.read(url);
-					lastRead = System.currentTimeMillis();
+				reader.read(url);
+				if (reader.getVersion() > lastRead) {
+					if (runner != null) {
+						runner.exitGracefully();
+					}
+					List<GpioAction> actions = reader.getActionList();
+					lastRead = reader.getVersion();
 					runner = new ScheduleRunner(actions);
 					runner.start();
 				}
-			} catch (IOException e) {
-				logger.log(Level.WARNING, e.getMessage());
-				// Try again later
 			} catch (DocumentException e) {
 				logger.log(Level.WARNING, e.getMessage());
 				// Try again later
@@ -80,39 +82,16 @@ public class SprinklerController {
 
 	}
 
-	/**
-	 * Stops a ScheduleRunner instance gracefully.
-	 * 
-	 * @param runner
-	 *            the instance of the ScheduleRunner
-	 * 
-	 * @throws InterruptedException
-	 *             if interrupted while waiting for the runner to die.
-	 */
-	private void stopRunner(ScheduleRunner runner) throws InterruptedException {
-		if (runner != null && runner.isAlive()) {
-			runner.interrupt();
-			runner.join();
+	private URL getURL() throws MalformedURLException {
+		IdKeeper idKeeper = new IdKeeper();
+		try {
+			File f = new File("/home/pi/schedules/s" + idKeeper.getId() + ".xml");
+			return f.toURI().toURL();
+//			return new URL("http://sprinklerwiz.appspot.com/schedules/s"
+//					+ idKeeper.getId() + ".xml");
+		} catch (IOException e) {
+			return null;
 		}
-
-	}
-
-	/**
-	 * Checks if a resource at a given URL accessible through HTTP has been
-	 * modified since the time it was last retrieved.
-	 * 
-	 * @param url
-	 *            the URL to check
-	 * @param lastRead
-	 *            the system time (in ms) when the URL was last retrieved
-	 * @return true if the URL has been modified
-	 * @throws IOException
-	 *             if a HTTP connection to the URL cannot be established
-	 */
-	private boolean isModified(URL url, long lastRead) throws IOException {
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setIfModifiedSince(lastRead);
-		return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
 	}
 
 }

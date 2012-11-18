@@ -9,5 +9,10 @@
 			<attribute name="javadoc_location" value="file:/Users/ecolban/Javalib/dom4j-1.6.1/docs/apidocs/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/ecolban/Javalib/commons-codec-1.6/commons-codec-1.6.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/Users/ecolban/Javalib/commons-codec-1.6/apidocs/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

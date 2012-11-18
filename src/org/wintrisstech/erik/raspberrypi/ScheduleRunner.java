@@ -30,7 +30,7 @@ public class ScheduleRunner extends Thread {
 			.getLogger(SprinklerController.class.getName());
 
 	// GPIO gateway
-	// private static GpioGateway GPIO_GW = getGpioGateway();
+	 private static GpioGateway GPIO_GW = getGpioGateway();
 
 	public ScheduleRunner(List<GpioAction> actions) {
 		this.actions = actions;
@@ -55,20 +55,20 @@ public class ScheduleRunner extends Thread {
 					long sleepTime = action.getTimeOfAction()
 							- TestTime.currentTimeMillis();
 					if (0L < sleepTime) {
-						logger.log(Level.INFO, "Going to sleep for {0}ms",
-								sleepTime);
+//						logger.log(Level.INFO, "Going to sleep for {0}ms",
+//								sleepTime);
 						Thread.sleep(sleepTime / TestTime.TIME_FACTOR);
 					}
 					int[] head = action.getHeadsOff();
 					for (int i = 0; i < head.length; i++) {
-						// GPIO_GW.setValue(OUT_PIN[head[i]], false);
+						 GPIO_GW.setValue(OUT_PIN[head[i]], false);
 					}
 					head = action.getHeadsOn();
 					for (int i = 0; i < head.length; i++) {
-						// GPIO_GW.setValue(OUT_PIN[head[i]], true);
+						 GPIO_GW.setValue(OUT_PIN[head[i]], true);
 					}
-					logger.log(Level.INFO, "{0}: {1}", new Object[] {
-							new Date(TestTime.currentTimeMillis()), action });
+//					logger.log(Level.INFO, "{0}: {1}", new Object[] {
+//							new Date(TestTime.currentTimeMillis()), action });
 					action.addWeek();
 				}
 			}
@@ -79,9 +79,22 @@ public class ScheduleRunner extends Thread {
 		} finally {
 			// Set all pins to "off"
 			for (int i = 0; i < OUT_PIN.length; i++) {
-				// GPIO_GW.setValue(OUT_PIN[i], false);
+				 GPIO_GW.setValue(OUT_PIN[i], false);
 			}
 			logger.info("Turning all heads off.");
+		}
+	}
+
+	/**
+	 * Called to exit gracefully. This method blocks until this thread is dead.
+	 * 
+	 * @throws InterruptedException
+	 *             if interrupted while waiting for this runner to die.
+	 */
+	public void exitGracefully() throws InterruptedException {
+		if (isAlive()) {
+			interrupt();
+			join();
 		}
 	}
 

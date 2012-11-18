@@ -30,6 +30,9 @@ public class ScheduleReader {
 	private static final Logger logger = Logger
 			.getLogger(SprinklerController.class.getName());
 
+	private int cachedVersion = -1;
+	private List<GpioAction> cachedActionList;
+
 	public static void main(String[] args) throws DocumentException {
 
 		ScheduleReader reader = new ScheduleReader();
@@ -41,41 +44,53 @@ public class ScheduleReader {
 			logger.log(Level.SEVERE, e.getMessage());
 			return;
 		}
-		List<GpioAction> list = reader.read(url);
+		reader.read(url);
+		List<GpioAction> list = reader.getActionList();
 		for (GpioAction action : list) {
 			System.out.println(action);
 		}
 	}
 
-	public List<GpioAction> read(URL url) throws DocumentException {
-		List<GpioAction> result = new ArrayList<GpioAction>();
+	public void read(URL url) throws DocumentException {
 		SAXReader reader = new SAXReader();
 		Document document = reader.read(url);
 		Element root = document.getRootElement();
-		now.setTimeInMillis(TestTime.currentTimeMillis());
-		for (@SuppressWarnings("unchecked")
-		Iterator<Element> i = root.elementIterator("schedule"); i.hasNext();) {
-			Element schedule = i.next();
-			for (int day : getDaysOfWeek(schedule)) {
-				if (day == 0) { // value 0 used for erroneous day
-					continue;
-				}
-				for (@SuppressWarnings("unchecked")
-				Iterator<Element> j = schedule.elementIterator("action"); j
-						.hasNext();) {
-					Element action = j.next();
-					try {
-						result.add(createGpioAction(day, action));
-					} catch (ParseException e) {
+		String versionString = root.attributeValue("version");
+		if (versionString == null) {
+			return;
+		}
+		int version = 0;
+		try {
+			version = Integer.parseInt(versionString);
+		} catch (NumberFormatException ex) {
+		}
+		if (version > cachedVersion) {
+			cachedVersion = version;
+			cachedActionList = new ArrayList<GpioAction>();
+			now.setTimeInMillis(TestTime.currentTimeMillis());
+			for (@SuppressWarnings("unchecked")
+			Iterator<Element> i = root.elementIterator("schedule"); i.hasNext();) {
+				Element schedule = i.next();
+				for (int day : getDaysOfWeek(schedule)) {
+					if (day == 0) { // value 0 used for erroneous day
 						continue;
-					} catch (NumberFormatException ex) {
-						continue;
+					}
+					for (@SuppressWarnings("unchecked")
+					Iterator<Element> j = schedule.elementIterator("action"); j
+							.hasNext();) {
+						Element action = j.next();
+						try {
+							cachedActionList.add(createGpioAction(day, action));
+						} catch (ParseException e) {
+							continue;
+						} catch (NumberFormatException ex) {
+							continue;
+						}
 					}
 				}
 			}
+			Collections.sort(cachedActionList);
 		}
-		Collections.sort(result);
-		return result;
 	}
 
 	private GpioAction createGpioAction(int day, Element action)
@@ -138,6 +153,20 @@ public class ScheduleReader {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public int getVersion() {
+		return cachedVersion;
+	}
+
+	/**
+	 * @return the ActionList
+	 */
+	public List<GpioAction> getActionList() {
+		return cachedActionList;
 	}
 
 }
