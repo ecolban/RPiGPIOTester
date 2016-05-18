@@ -1,4 +1,4 @@
-package org.wintrisstech.erik.raspberrypi;
+package org.jointheleague.ecolban.sprinkler;
 
 public class TestTime {
 

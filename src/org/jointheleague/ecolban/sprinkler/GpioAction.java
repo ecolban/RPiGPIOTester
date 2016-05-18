@@ -1,4 +1,4 @@
-package org.wintrisstech.erik.raspberrypi;
+package org.jointheleague.ecolban.sprinkler;
 
 import java.util.Arrays;
 import java.util.Calendar;

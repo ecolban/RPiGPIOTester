@@ -1,4 +1,4 @@
-package org.wintrisstech.erik.raspberrypi;
+package org.jointheleague.ecolban.sprinkler;
 
 import java.io.BufferedReader;
 import java.io.File;
